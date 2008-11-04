@@ -15,11 +15,12 @@ module Reddit
   
   # A reddit browsing session.
   class Session
-
+    
     # initialize the session with a username and password.  Currently not used.
     def initialize(username = "", password = "")
       @username = username
       @password = password
+      @logged_in = false
     end
     
     # return the main reddit.
@@ -37,5 +38,20 @@ module Reddit
       return User.new(username)
     end
     
+    def logged_in?
+      @logged_in
+    end
+    
+    def login
+      url = "http://www.reddit.com/api/login.json"
+      params = { 'reason' => '', 'op' => 'login-main', 'dest' => '/', 'user_login' => @username, 'passwd_login' => @password, 'rem' => '1' }
+      result = Net::HTTP.post_form(URI.parse(url), params)
+      resources = JSON.parse(result.body, :max_nesting => 0)
+      if resources['error']
+        raise AuthenticationException, resources['error']['message']
+      end
+      pp resources
+      return true
+    end
   end
 end
