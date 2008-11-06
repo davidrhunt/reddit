@@ -1,3 +1,5 @@
+require 'hpricot'
+
 module Reddit
   BASE_URL = "http://www.reddit.com/"
   PROFILE_URL = BASE_URL + "user/[username]/"
@@ -17,14 +19,18 @@ module Reddit
   # raised when attempting to log in with incorrect credentials.
   class AuthenticationException < StandardError; end
   
+  # raised when the modhash (uh/userhash) cannot be found within the page body after authentication.
+  class ModhashNotFound < StandardError; end
+  
   # A reddit browsing session.
   class Session
-    attr_reader :username, :cookie
+    attr_reader :username, :cookie, :modhash
     
     def self.login(username, password)
-      session = Session.new(username, password)
-      session.authenticate
-      session
+      Session.new(username, password) do |session|
+        session.authenticate
+        session.fetch_modhash
+      end
     end
     
     # initialize the session with a username and password.  Currently not used.
@@ -33,11 +39,12 @@ module Reddit
       @password = password
       @logged_in = false
       @cookie = ''
+      yield self if block_given?
     end
     
     # return the main reddit.
     def main
-      return Reddit.new()
+      return Reddit.new
     end
     
     # return a specific subreddit.
@@ -73,9 +80,21 @@ module Reddit
       return true
     end
     
+    # The 'modhash' is a special token that is passed around to various Reddit API calls. It currently must be extracted
+    # from the page body once you have successfully authenticated with Reddit. To extract the modhash, we fetch the main
+    # Reddit home page and then rip through the script tags with Hpricot.
+    def fetch_modhash
+      data = get(BASE_URL)
+      doc = Hpricot(data)
+      jscript = doc.at('script').innerHTML
+      match = jscript.match(/modhash \= \'(.+?)\'/)
+      raise ModhashNotFound, "Unable to find the modhash in the page source" unless match
+      @modhash = match[1]
+    end
+    
     def get_article(url)
       url = INFO_URL.gsub('[url]', url)
-      info = get(url)
+      info = get_json(url)
       Article.new(info['data']['children'][0]['data'])
     end
     
@@ -87,18 +106,18 @@ module Reddit
       vote(object, -1)
     end
     
+    def clear!(object)
+      vote(object, 0)
+    end
+    
     def save!(object)
       raise "Not Yet Implemented"
     end
     
     protected
     def vote(object, direction)
-      params = { 'dir' => direction, 'id' => object.id, 'r' => 'reddit.com', 'uh' => '', 'vh' => '' }
-      debugger
-      info = post(VOTE_URL, params)
-      pp info
-      debugger
-      info
+      params = { 'dir' => direction, 'id' => object.name, 'r' => 'reddit.com', 'uh' => self.modhash, 'vh' => '' }
+      post_json(VOTE_URL, params)
     end
     
     def headers
@@ -109,7 +128,11 @@ module Reddit
       uri = URI.parse(url)
       http = Net::HTTP.new(uri.host, uri.port)
       response = http.get(uri.path + "?#{uri.query}", headers)
-      JSON.parse(response.body, :max_nesting => 0)
+      response.body
+    end
+    
+    def get_json(url)
+      JSON.parse(get(url), :max_nesting => 0)
     end
     
     def post(url, params = {})
@@ -117,7 +140,11 @@ module Reddit
       http = Net::HTTP.new(uri.host, uri.port)
       params_string = params.map { |k, v| "#{k}=#{v}" }.join('&')
       response = http.post(uri.path, params_string, headers)
-      JSON.parse(response.body, :max_nesting => 0)
+      response.body
+    end
+    
+    def post_json(url, params = {})
+      JSON.parse(post(url, params), :max_nesting => 0)
     end
   end
 end
