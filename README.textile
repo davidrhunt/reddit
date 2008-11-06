@@ -40,7 +40,13 @@ h2. REQUIREMENTS:
 
 h2. INSTALL:
 
-* sudo gem install bterlson-reddit --source=http://gems.github.com
+* sudo gem install blakewatters-reddit --source=http://gems.github.com
+
+h2. CREDITS:
+
+*  Brian Terlson (http://github.com/bterlson) - Original implementation
+*  Blake Watters (http://github.com/blakewatters) - Implementation of logging in, like/dislike/saving articles, other extensions
+*  Chromakode 	 (http://chromakode.nfshost.com/blog/) - Socialite Firefox plugin, Reddit API advise, general cheerleading
 
 h2. LICENSE:
 

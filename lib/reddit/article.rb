@@ -1,8 +1,9 @@
 module Reddit
   # A reddit article or submission.
   class Article
-    attr_reader :score, :name, :title, :comment_count, :ups, :downs, :url, :domain, :author, :id, :created_at
-    
+    attr_reader :name, :title, :comment_count, :url, :domain, :author, :id, :created_at, :subreddit_id, :subreddit
+    attr_accessor :score, :likes, :saved, :ups, :downs
+                
     # Initializes the data for the article.  Takes a hash of the various attributes as taken from the API.
     def initialize(attributes)
       @score = attributes['score']
@@ -20,6 +21,9 @@ module Reddit
       @saved = attributes['saved']
       @clicked = attributes['clicked']
       @hidden = attributes['hidden']
+      @likes = attributes['likes']
+      @subreddit_id = attributes['subreddit_id']
+      @subreddit = attributes['subreddit']
     end
     
     # indicates if the current logged in user has saved the article.
@@ -35,6 +39,11 @@ module Reddit
     # indicates if the current logged in user has hidden the article.
     def hidden?
       return @hidden
+    end
+    
+    # indicates if the current logged in user likes the article.
+    def liked?
+      return @likes
     end
     
     # returns a CommentList of this article's comments.

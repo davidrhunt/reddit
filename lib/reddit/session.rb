@@ -8,6 +8,7 @@ module Reddit
   
   LOGIN_URL = BASE_URL + "api/login.json"
   INFO_URL = BASE_URL + "api/info.json?count=1&url=[url]"
+  BY_ID_URL = BASE_URL + "by_id/[name].json"
   VOTE_URL = BASE_URL + "api/vote.json"
   
   # raised when attempting to interact with a subreddit that doesn't exist.
@@ -100,18 +101,32 @@ module Reddit
     
     def like!(object)
       vote(object, 1)
+      object.likes = true
+      object.score += 1
+      object.ups += 1
     end
     
     def dislike!(object)
       vote(object, -1)
+      object.likes = false
+      object.score += 1
+      object.downs += 1
     end
     
     def clear!(object)
       vote(object, 0)
+      object.likes = nil
+      object.score -= 1
     end
     
     def save!(object)
       raise "Not Yet Implemented"
+      object.saved = true
+    end
+    
+    def unsave!(object)
+      raise "Not Yet Implemented"
+      object.saved = false
     end
     
     protected
