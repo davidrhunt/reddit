@@ -10,6 +10,10 @@ module Reddit
   INFO_URL = BASE_URL + "api/info.json?count=1&url=[url]"
   BY_ID_URL = BASE_URL + "by_id/[name].json"
   VOTE_URL = BASE_URL + "api/vote.json"
+  HIDE_URL = BASE_URL + "api/hide.json"
+  UNHIDE_URL = BASE_URL + "api/unhide.json"
+  SAVE_URL = BASE_URL + "api/save.json"
+  UNSAVE_URL = BASE_URL + "api/unsave.json"
   
   # raised when attempting to interact with a subreddit that doesn't exist.
   class SubredditNotFound < StandardError; end
@@ -120,13 +124,35 @@ module Reddit
     end
     
     def save!(object)
-      raise "Not Yet Implemented"
+      params = { 'id' => object.name, 'uh' => self.modhash }
+      post_json(SAVE_URL, params)
       object.saved = true
     end
     
     def unsave!(object)
-      raise "Not Yet Implemented"
+      params = { 'id' => object.name, 'uh' => self.modhash }
+      post_json(UNSAVE_URL, params)
       object.saved = false
+    end
+    
+    def hide!(object)
+      params = { 'id' => object.name, 'uh' => self.modhash }
+      post_json(HIDE_URL, params)
+      object.hidden = true
+    end
+    
+    def show!(object)
+      params = { 'id' => object.name, 'uh' => self.modhash }
+      post_json(UNHIDE_URL, params)
+      object.hidden = false
+    end
+    
+    def subscribe!(subreddit)
+      raise "Not yet implemented"
+    end
+    
+    def unsubscribe!(subreddit)
+      raise "Not yet implemented"
     end
     
     protected
