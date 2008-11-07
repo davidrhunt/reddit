@@ -2,11 +2,26 @@ module Reddit
   
   # The main reddit or a subreddit.
   class Reddit < ResourceList
+    attr_reader :name, :title, :url, :id, :description, :created_at
     
     # Initialize the reddit.  If no name is specified, the reddit will be the main reddit.
-    def initialize(name = nil)
-      @name = name
-      @url = @name.nil? ? BASE_URL : SUBREDDIT_URL.gsub('[subreddit]', @name)
+    def initialize(attributes = nil)
+      if attributes.kind_of?(Hash)
+        @name = attributes['name']
+        @title = attributes['title']
+        @subscribers = attributes['subscribers']
+        @url = SUBREDDIT_URL.gsub('[subreddit]', @title)
+        @id = attributes['id']
+        @description = attributes['description']
+        @created_at = Time.at(attributes['created']) unless attributes['created'].nil?
+      else        
+        @title = attributes
+        @url = attributes.nil? ? BASE_URL : SUBREDDIT_URL.gsub('[subreddit]', @title)
+      end
+    end
+    
+    def subscriber_count
+      @subscribers
     end
     
     def hot(options = {})

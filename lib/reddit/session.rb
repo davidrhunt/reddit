@@ -14,6 +14,11 @@ module Reddit
   UNHIDE_URL = BASE_URL + "api/unhide.json"
   SAVE_URL = BASE_URL + "api/save.json"
   UNSAVE_URL = BASE_URL + "api/unsave.json"
+  SUBSCRIBE_URL = BASE_URL + "api/subscribe.json"
+  
+  SUBSCRIBER_URL = BASE_URL + "reddits/mine/subscriber.json"
+  CONTRIBUTOR_URL = BASE_URL + "reddits/mine/contributor.json"
+  MODERATOR_URL = BASE_URL + "reddits/mine/moderator.json"
   
   # raised when attempting to interact with a subreddit that doesn't exist.
   class SubredditNotFound < StandardError; end
@@ -26,6 +31,9 @@ module Reddit
   
   # raised when the modhash (uh/userhash) cannot be found within the page body after authentication.
   class ModhashNotFound < StandardError; end
+  
+  # raised when the requested action requires the user to be logged in.
+  class MustBeLoggedIn < StandardError; end
   
   # A reddit browsing session.
   class Session
@@ -97,6 +105,18 @@ module Reddit
       @modhash = match[1]
     end
     
+    def subscribing
+      load_subreddits_from(SUBSCRIBER_URL)
+    end
+    
+    def contributing
+      load_subreddits_from(CONTRIBUTOR_URL)
+    end
+    
+    def moderating
+      load_subreddits_from(MODERATOR_URL)
+    end
+    
     def get_article(url)
       url = INFO_URL.gsub('[url]', url)
       info = get_json(url)
@@ -148,11 +168,13 @@ module Reddit
     end
     
     def subscribe!(subreddit)
-      raise "Not yet implemented"
+      params = { 'sr' => subreddit.name, 'action' => 'sub', 'uh' => self.modhash }
+      post_json(SUBSCRIBE_URL, params)
     end
     
     def unsubscribe!(subreddit)
-      raise "Not yet implemented"
+      params = { 'sr' => subreddit.name, 'action' => 'unsub', 'uh' => self.modhash }
+      post_json(SUBSCRIBE_URL, params)
     end
     
     protected
@@ -186,6 +208,15 @@ module Reddit
     
     def post_json(url, params = {})
       JSON.parse(post(url, params), :max_nesting => 0)
+    end
+    
+    def load_subreddits_from(url)
+      json = get_json(url)
+      json['data']['children'].map { |data| Reddit.new(data['data']) }
+    end
+    
+    def require_login
+      raise MustBeLoggedIn unless logged_in?
     end
   end
 end
