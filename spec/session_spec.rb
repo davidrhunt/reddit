@@ -73,6 +73,10 @@ describe Reddit::Session, "without logging in" do
   it "should not allow you to unsubscribe from something" do 
     fails_login_requirement { @reddit.unsubscribe!(@article) }
   end
+  
+  it "should not allow you to fetch a modhash" do 
+    fails_login_requirement { @reddit.fetch_modhash }
+  end
 end
 
 describe Reddit::Session, "when logged in" do
@@ -169,5 +173,15 @@ describe Reddit::Session, "when logged in" do
 
   it "should allow you to unsubscribe from something" do 
     meets_login_requirement { @reddit.unsubscribe!(@article) }
+  end
+  
+  it "should allow you to fetch a modhash" do 
+    meets_login_requirement { @reddit.fetch_modhash }
+  end
+  
+  it "should fetch the modhash from the reddit page body" do
+    page_body = read_fixture('page.body')
+    @reddit.should_receive(:get).with(Reddit::BASE_URL).and_return(page_body)
+    @reddit.fetch_modhash.should == "1v7pttl7jzff12abc280f5d604674dfd768f9d3d15fabc64d8"
   end
 end

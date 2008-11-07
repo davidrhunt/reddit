@@ -98,6 +98,7 @@ module Reddit
     # from the page body once you have successfully authenticated with Reddit. To extract the modhash, we fetch the main
     # Reddit home page and then rip through the script tags with Hpricot.
     def fetch_modhash
+      require_login
       data = get(BASE_URL)
       doc = Hpricot(data)
       jscript = doc.at('script').innerHTML
