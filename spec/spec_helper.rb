@@ -13,3 +13,14 @@ end
 
 $:.unshift(File.dirname(__FILE__) + '/../lib')
 require 'reddit'
+
+module RedditSpecHelpers
+  def read_fixture(filename)
+    fixture = File.dirname(__FILE__) + '/fixtures/' + filename
+    File.read(fixture)
+  end
+end
+
+Spec::Runner.configure do |config|
+  config.include(RedditSpecHelpers)
+end

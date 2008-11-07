@@ -1,9 +1,21 @@
 require File.dirname(__FILE__) + '/spec_helper.rb'
 
+module SessionHelpers
+  def fails_login_requirement
+    lambda { yield }.should raise_error(Reddit::MustBeLoggedIn)
+  end
+  
+  def meets_login_requirement
+    lambda { yield }.should_not raise_error(Reddit::MustBeLoggedIn)
+  end
+end
+
 describe Reddit::Session, "without logging in" do
+  include SessionHelpers
   
   before(:each) do
     @reddit = Reddit::Session.new()
+    @article = Reddit::Article.new({})
   end
 
   it "should grab the main page" do
@@ -16,6 +28,62 @@ describe Reddit::Session, "without logging in" do
   
   it "should grab a subreddit" do
     @reddit.subreddit("programming").should_not be_nil
+  end
+  
+  it "should not be logged in" do
+    @reddit.should_not be_logged_in
+  end
+  
+  it "should not allow you to return an owner" do 
+    fails_login_requirement { @reddit.owner }
+  end
+  
+  it "should not allow you to like something" do 
+    fails_login_requirement { @reddit.like!(@article) }
+  end
+  
+  it "should not allow you to dislike something" do 
+    fails_login_requirement { @reddit.dislike!(@article) }
+  end
+  
+  it "should not allow you to clear the rating on something" do 
+    fails_login_requirement { @reddit.clear!(@article) }
+  end
+  
+  it "should not allow you to save something" do 
+    fails_login_requirement { @reddit.save!(@article) }
+  end
+  
+  it "should not allow you to unsave something" do 
+    fails_login_requirement { @reddit.unsave!(@article) }
+  end
+  
+  it "should not allow you to hide something" do 
+    fails_login_requirement { @reddit.hide!(@article) }
+  end
+  
+  it "should not allow you to show something" do 
+    fails_login_requirement { @reddit.show!(@article) }
+  end
+  
+  it "should not allow you to subscribe to something" do 
+    fails_login_requirement { @reddit.subscribe!(@article) }
+  end
+  
+  it "should not allow you to unsubscribe from something" do 
+    fails_login_requirement { @reddit.unsubscribe!(@article) }
+  end
+end
+
+describe Reddit::Session, "when logged in" do
+  include SessionHelpers
+  
+  before(:each) do
+    @reddit = Reddit::Session.new()
+    @reddit.stub!(:logged_in?).and_return(true)
+    @reddit.stub!(:username).and_return('blakewatters')
+    @reddit.stub!(:cookie).and_return('monster')
+    @reddit.stub!(:modhash).and_return('jxg28km2j1jdjgsa27931')
   end
   
   it "should load subscribed subreddits" do
@@ -31,11 +99,6 @@ describe Reddit::Session, "without logging in" do
   it "should load moderator subreddits" do
     @reddit.should_receive(:load_subreddits_from).with(Reddit::MODERATOR_URL)
     @reddit.moderating
-  end
-  
-  def read_fixture(filename)
-    fixture = File.dirname(__FILE__) + '/fixtures/' + filename
-    File.read(fixture)
   end
   
   describe ".subscribing" do
@@ -66,5 +129,45 @@ describe Reddit::Session, "without logging in" do
       it { @science_subreddit.description.should == '' }
       it { @science_subreddit.created_at.should == Time.parse("Wed Oct 18 09:54:26 -0400 2006") }
     end
+  end
+  
+  it "should allow you to retrieve the account owner" do 
+    meets_login_requirement { @reddit.owner }
+  end
+  
+  it "should allow you to like something" do 
+    meets_login_requirement { @reddit.like!(@article) }
+  end
+
+  it "should allow you to dislike something" do 
+    meets_login_requirement { @reddit.dislike!(@article) }
+  end
+
+  it "should allow you to clear the rating on something" do 
+    meets_login_requirement { @reddit.clear!(@article) }
+  end
+
+  it "should allow you to save something" do 
+    meets_login_requirement { @reddit.save!(@article) }
+  end
+
+  it "should allow you to unsave something" do 
+    meets_login_requirement { @reddit.unsave!(@article) }
+  end
+
+  it "should allow you to hide something" do 
+    meets_login_requirement { @reddit.hide!(@article) }
+  end
+
+  it "should allow you to show something" do 
+    meets_login_requirement { @reddit.show!(@article) }
+  end
+
+  it "should allow you to subscribe to something" do 
+    meets_login_requirement { @reddit.subscribe!(@article) }
+  end
+
+  it "should allow you to unsubscribe from something" do 
+    meets_login_requirement { @reddit.unsubscribe!(@article) }
   end
 end

@@ -71,6 +71,7 @@ module Reddit
     end
     
     def owner
+      require_login
       User.new(@username)
     end
     
@@ -144,41 +145,48 @@ module Reddit
     end
     
     def save!(object)
+      require_login
       params = { 'id' => object.name, 'uh' => self.modhash }
       post_json(SAVE_URL, params)
       object.saved = true
     end
     
     def unsave!(object)
+      require_login
       params = { 'id' => object.name, 'uh' => self.modhash }
       post_json(UNSAVE_URL, params)
       object.saved = false
     end
     
     def hide!(object)
+      require_login
       params = { 'id' => object.name, 'uh' => self.modhash }
       post_json(HIDE_URL, params)
       object.hidden = true
     end
     
     def show!(object)
+      require_login
       params = { 'id' => object.name, 'uh' => self.modhash }
       post_json(UNHIDE_URL, params)
       object.hidden = false
     end
     
     def subscribe!(subreddit)
+      require_login
       params = { 'sr' => subreddit.name, 'action' => 'sub', 'uh' => self.modhash }
       post_json(SUBSCRIBE_URL, params)
     end
     
     def unsubscribe!(subreddit)
+      require_login
       params = { 'sr' => subreddit.name, 'action' => 'unsub', 'uh' => self.modhash }
       post_json(SUBSCRIBE_URL, params)
     end
     
     protected
     def vote(object, direction)
+      require_login
       params = { 'dir' => direction, 'id' => object.name, 'r' => 'reddit.com', 'uh' => self.modhash, 'vh' => '' }
       post_json(VOTE_URL, params)
     end
@@ -211,12 +219,13 @@ module Reddit
     end
     
     def load_subreddits_from(url)
+      require_login
       json = get_json(url)
       json['data']['children'].map { |data| Reddit.new(data['data']) }
     end
     
     def require_login
-      raise MustBeLoggedIn unless logged_in?
+      raise MustBeLoggedIn, "You must be logged in." unless logged_in?
     end
   end
 end
