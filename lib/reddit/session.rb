@@ -81,8 +81,7 @@ module Reddit
     
     def authenticate
       url = LOGIN_URL
-      #params = { 'reason' => '', 'op' => 'login-main', 'dest' => '/', 'user_login' => @username, 'passwd_login' => @password, 'rem' => '1' }
-      params = { 'rem' => 'off', 'user_login' => @username, 'passwd_login' => @password, 'op' => 'login-main', 'uh' => '', '-' => '' }
+      params = { 'rem' => 'on', 'user' => @username, 'passwd' => @password, 'op' => 'login-main', 'id' => '%23login_login-main' }
       pp params
       result = Net::HTTP.post_form(URI.parse(url), params)
       resources = JSON.parse(result.body, :max_nesting => 0)
@@ -104,7 +103,7 @@ module Reddit
       data = get(BASE_URL)
       doc = Hpricot(data)
       jscript = doc.at('script').innerHTML
-      match = jscript.match(/modhash \= \'([a-z0-9]+?)\'/)
+      match = jscript.match(/modhash: \'([a-z0-9]+?)\',/)
       raise ModhashNotFound, "Unable to find the modhash in the page source" unless match
       @modhash = match[1]
     end
@@ -224,6 +223,7 @@ module Reddit
     def load_subreddits_from(url)
       require_login
       json = get_json(url)
+      pp json
       json['data']['children'].map { |data| Reddit.new(data['data']) }
     end
     

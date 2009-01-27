@@ -51,5 +51,27 @@ module Reddit
       @comments_list ||= CommentList.new(@id)
       return @comments_list.top_level(options)
     end
+    
+    def thumbnail_url
+      "http://thumbs.reddit.com/#{name}.png"
+    end
+    
+    def has_thumbnail?
+      response = get_thumbnail
+      response.code == "200"
+    end
+    
+    def thumbnail
+      response = get_thumbnail
+      response.body
+    end
+    
+    private
+    def get_thumbnail
+      return @thumbnail_response if @thumbnail_response
+      uri = URI.parse(thumbnail_url)
+      http = Net::HTTP.new(uri.host, uri.port)
+      @thumbnail_response = http.get(uri.path + "?#{uri.query}")
+    end
   end
 end
