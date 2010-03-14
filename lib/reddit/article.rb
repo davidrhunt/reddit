@@ -1,7 +1,7 @@
 module Reddit
   # A reddit article or submission.
   class Article
-    attr_reader :name, :title, :comment_count, :url, :domain, :author, :id, :created_at, :subreddit_id, :subreddit
+    attr_reader :name, :title, :comment_count, :url, :domain, :author, :id, :created_at, :subreddit_id, :subreddit, :selftext
     attr_accessor :score, :likes, :saved, :ups, :downs
                 
     # Initializes the data for the article.  Takes a hash of the various attributes as taken from the API.
@@ -16,6 +16,7 @@ module Reddit
       @domain = attributes['domain']
       @author = User.new(attributes['author']) unless attributes['author'].nil?
       @id = attributes['id']
+      @selftext = attributes['selftext']
       # Reddit's created_at timestamps are currently wonky, so this will return the wrong time.
       @created_at = Time.at(attributes['created']) unless attributes['created'].nil?
       @saved = attributes['saved']
